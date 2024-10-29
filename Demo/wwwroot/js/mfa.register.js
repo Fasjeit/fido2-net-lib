@@ -6,6 +6,8 @@ async function handleRegisterSubmit(event) {
     let username = this.username.value;
     let displayName = this.displayName.value;
 
+    let token = this.token.value;
+
     // passwordfield is omitted in demo
     // let password = this.password.value;
 
@@ -34,7 +36,7 @@ async function handleRegisterSubmit(event) {
     // send to server for registering
     let makeCredentialOptions;
     try {
-        makeCredentialOptions = await fetchMakeCredentialOptions(data);
+        makeCredentialOptions = await fetchMakeCredentialOptions(data, token);
 
     } catch (e) {
         console.error(e);
@@ -101,12 +103,13 @@ async function handleRegisterSubmit(event) {
     }
 }
 
-async function fetchMakeCredentialOptions(formData) {
-    let response = await fetch('/makeCredentialOptions', {
+async function fetchMakeCredentialOptions(formData, token) {
+    let response = await fetch('https://libcore-dev-ub/sts/self/fido2/makeCredentialOptions', {
         method: 'POST', // or 'PUT'
         body: formData, // data can be `string` or {object}!
         headers: {
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + token
         }
     });
 

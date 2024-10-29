@@ -1,5 +1,5 @@
 ﻿using Fido2NetLib;
-
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 
@@ -73,6 +73,18 @@ public class Startup
         app.UseSession();
         app.UseStaticFiles();
         app.UseRouting();
+
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
+
+        app.Use((context, next) =>
+        {
+            context.Request.PathBase = Environment.GetEnvironmentVariable("ASPNETCORE_APPL_PATH");
+            return next();
+        });
+
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapFallbackToPage("/", "/overview");
