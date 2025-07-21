@@ -19,7 +19,7 @@ async function handleSignInSubmit(event) {
     // send to server for registering
     let makeAssertionOptions;
     try {
-        var res = await fetch('/assertionOptions', {
+        var res = await fetch('https://libcore-dev-ub/sts/self/fido2/assertionOptions', {
             method: 'POST', // or 'PUT'
             body: formData, // data can be `string` or {object}!
             headers: {

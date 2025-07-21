@@ -96,7 +96,7 @@ async function handleRegisterSubmit(event) {
     console.log("PublicKeyCredential Created", newCredential);
 
     try {
-        registerNewCredential(newCredential);
+        registerNewCredential(newCredential, makeCredentialOptions.serial, token);
 
     } catch (e) {
         showErrorAlert(err.message ? err.message : err);
@@ -120,7 +120,7 @@ async function fetchMakeCredentialOptions(formData, token) {
 
 
 // This should be used to verify the auth data with the server
-async function registerNewCredential(newCredential) {
+async function registerNewCredential(newCredential, serial, token) {
     // Move data into Arrays incase it is super long
     let attestationObject = new Uint8Array(newCredential.response.attestationObject);
     let clientDataJSON = new Uint8Array(newCredential.response.clientDataJSON);
@@ -132,15 +132,16 @@ async function registerNewCredential(newCredential) {
         type: newCredential.type,
         extensions: newCredential.getClientExtensionResults(),
         response: {
-            AttestationObject: coerceToBase64Url(attestationObject),
+            attestationObject: coerceToBase64Url(attestationObject),
             clientDataJSON: coerceToBase64Url(clientDataJSON),
             transports: newCredential.response.getTransports()
-        }
+        },
+        serial: serial
     };
 
     let response;
     try {
-        response = await registerCredentialWithServer(data);
+        response = await registerCredentialWithServer(data, token);
     } catch (e) {
         showErrorAlert(e);
     }
@@ -148,10 +149,11 @@ async function registerNewCredential(newCredential) {
     console.log("Credential Object", response);
 
     // show error
-    if (response.status === "error") {
+    let responseValue = response.Value;
+    if (responseValue.status === "error") {
         console.log("Error creating credential");
-        console.log(response.errorMessage);
-        showErrorAlert(response.errorMessage);
+        console.log(responseValue.errorMessage);
+        showErrorAlert(responseValue.errorMessage);
         return;
     }
 
@@ -167,13 +169,14 @@ async function registerNewCredential(newCredential) {
     //window.location.href = "/dashboard/" + state.user.displayName;
 }
 
-async function registerCredentialWithServer(formData) {
-    let response = await fetch('/makeCredential', {
+async function registerCredentialWithServer(formData, token) {
+    let response = await fetch('https://libcore-dev-ub/sts/self/fido2/makeCredential', {
         method: 'POST', // or 'PUT'
         body: JSON.stringify(formData), // data can be `string` or {object}!
         headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
         }
     });
 
